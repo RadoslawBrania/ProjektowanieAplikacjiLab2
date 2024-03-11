@@ -12,8 +12,9 @@ class Vehicle implements Comparable<Vehicle> {
     private int year;
     private double mileage;
     private double engineCapacity;
+    private int range;
 
-    public Vehicle(String brand, String model, ItemCondition condition, double price, int year, double mileage, double engineCapacity) {
+    public Vehicle(String brand, String model, ItemCondition condition, double price, int year, double mileage, double engineCapacity, int range ) {
         this.brand = brand;
         this.model = model;
         this.condition = condition;
@@ -21,6 +22,7 @@ class Vehicle implements Comparable<Vehicle> {
         this.year = year;
         this.mileage = mileage;
         this.engineCapacity = engineCapacity;
+        this.range = range;
     }
 
     public void print() {
@@ -31,7 +33,9 @@ class Vehicle implements Comparable<Vehicle> {
                 "\nMileage: " + mileage +
                 "\nEngine Capacity: " + engineCapacity);
     }
-
+    public boolean isElectric(){
+        return this.range != 0;
+    }
     public String getBrand() {
         return brand;
     }
@@ -192,28 +196,29 @@ public class Main {
         CarShowroom mainShowroom = container.getShowrooms().get("Main Showroom");
         CarShowroom cityShowroom = container.getShowrooms().get("City Showroom");
 
-        mainShowroom.addProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5));
-        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0));
-        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0));
-        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 0, 2.0));
+        mainShowroom.addProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5,0));
+        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
+        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
+        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 0, 2.0,0));
 
-        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 1, 2.0));
+        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 1, 2.0,0));
 
-        cityShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8));
-        mainShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8));
+        cityShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
+        mainShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
 
         cityShowroom.sortByAmount();
         mainShowroom.summary();
         cityShowroom.summary();
 
         mainShowroom.sortByName();
-        mainShowroom.removeProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5));
+        mainShowroom.removeProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5,0));
         mainShowroom.summary();
 
         System.out.println("Empty showrooms: " + container.findEmpty());
         System.out.println("Used condition: " + mainShowroom.countByCondition(ItemCondition.USED));
         System.out.println("Searching for Fusion " + mainShowroom.search("Fusion").getBrand());
         System.out.println("Searching for partial Co - matches count:  " + mainShowroom.searchPartial("co").size());
+        System.out.println("Is the car electric? " + mainShowroom.search("Fusion").isElectric());
 
         container.summary();
         System.out.println(mainShowroom.max().getBrand());
