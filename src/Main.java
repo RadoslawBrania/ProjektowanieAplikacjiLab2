@@ -1,4 +1,6 @@
 import java.util.*;
+import javax.swing.*;
+
 
 enum ItemCondition {
     NEW, USED, DAMAGED
@@ -55,11 +57,26 @@ class Vehicle implements Comparable<Vehicle> {
     public int compareTo(Vehicle other) {
         return this.brand.compareTo(other.brand);
     }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getYear() {
+    return year;
+    }
+    public double getMileage(){
+        return mileage;
+    }
+
+    public double getEngineCapacity() {
+    return engineCapacity;
+    }
 }
 
 class CarShowroom {
     private String showroomName;
-    private List<Vehicle> vehicles;
+    private java.util.List<Vehicle> vehicles;
     private int maxCapacity;
 
     public CarShowroom(String showroomName, int maxCapacity) {
@@ -86,7 +103,7 @@ class CarShowroom {
         vehicles.removeIf(v -> vehicle.getModel().equals(v.getModel()));
     }
 
-    public List<Vehicle> getVehicles() {
+    public java.util.List<Vehicle> getVehicles() {
         return vehicles;
     }
 
@@ -99,8 +116,8 @@ class CarShowroom {
         return null;
     }
 
-    public List<Vehicle> searchPartial(String partialName) {
-        List<Vehicle> matchingVehicles = new ArrayList<>();
+    public java.util.List<Vehicle> searchPartial(String partialName) {
+        java.util.List<Vehicle> matchingVehicles = new ArrayList<>();
         for (Vehicle vehicle : vehicles) {
             if ((vehicle.getModel().toLowerCase()).contains(partialName)) {
                 System.out.println(vehicle.getModel().toLowerCase());
@@ -127,14 +144,14 @@ class CarShowroom {
         }
     }
 
-    public List<Vehicle> sortByName() {
-        List<Vehicle> sortedList = new ArrayList<>(vehicles);
+    public java.util.List<Vehicle> sortByName() {
+        java.util.List<Vehicle> sortedList = new ArrayList<>(vehicles);
         Collections.sort(sortedList);
         return sortedList;
     }
 
-    public List<Vehicle> sortByAmount() {
-        List<Vehicle> sortedList = new ArrayList<>(vehicles);
+    public java.util.List<Vehicle> sortByAmount() {
+        java.util.List<Vehicle> sortedList = new ArrayList<>(vehicles);
         sortedList.sort(Comparator.comparingInt(o -> Collections.frequency(sortedList, o)));
         Collections.reverse(sortedList);
         return sortedList;
@@ -164,8 +181,8 @@ class CarShowroomContainer {
         showrooms.remove(name);
     }
 
-    public List<String> findEmpty() {
-        List<String> emptyShowrooms = new ArrayList<>();
+    public java.util.List<String> findEmpty() {
+        java.util.List<String> emptyShowrooms = new ArrayList<>();
         for (Map.Entry<String, CarShowroom> entry : showrooms.entrySet()) {
             if (entry.getValue().getVehicles().isEmpty()) {
                 emptyShowrooms.add(entry.getKey());
@@ -186,41 +203,50 @@ class CarShowroomContainer {
     }
 }
 
+
 public class Main {
     public static void main(String[] args) {
-        CarShowroomContainer container = new CarShowroomContainer();
-
-        container.addCenter("Main Showroom", 10);
-        container.addCenter("City Showroom", 5);
-
-        CarShowroom mainShowroom = container.getShowrooms().get("Main Showroom");
-        CarShowroom cityShowroom = container.getShowrooms().get("City Showroom");
-
-        mainShowroom.addProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5,0));
-        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
-        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
-        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 0, 2.0,0));
-
-        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 1, 2.0,0));
-
-        cityShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
-        mainShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
-
-        cityShowroom.sortByAmount();
-        mainShowroom.summary();
-        cityShowroom.summary();
-
-        mainShowroom.sortByName();
-        mainShowroom.removeProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5,0));
-        mainShowroom.summary();
-
-        System.out.println("Empty showrooms: " + container.findEmpty());
-        System.out.println("Used condition: " + mainShowroom.countByCondition(ItemCondition.USED));
-        System.out.println("Searching for Fusion " + mainShowroom.search("Fusion").getBrand());
-        System.out.println("Searching for partial Co - matches count:  " + mainShowroom.searchPartial("co").size());
-        System.out.println("Is the car electric? " + mainShowroom.search("Fusion").isElectric());
-
-        container.summary();
-        System.out.println(mainShowroom.max().getBrand());
+        SwingUtilities.invokeLater(() -> {
+            CarShowroomGUI showroomGUI = new CarShowroomGUI();
+            showroomGUI.setVisible(true);
+        });
     }
 }
+
+//public class Main {
+//    public static void main(String[] args) {
+//        CarShowroomContainer container = new CarShowroomContainer();
+//
+//        container.addCenter("Main Showroom", 10);
+//        container.addCenter("City Showroom", 5);
+//
+//        CarShowroom mainShowroom = container.getShowrooms().get("Main Showroom");
+//        CarShowroom cityShowroom = container.getShowrooms().get("City Showroom");
+//
+//        mainShowroom.addProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5,0));
+//        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
+//        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
+//        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 0, 2.0,0));
+//
+//        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 1, 2.0,0));
+//
+//        cityShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
+//        mainShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
+//
+//        cityShowroom.sortByAmount();
+//        mainShowroom.summary();
+//        cityShowroom.summary();
+//
+//        mainShowroom.sortByName();
+//        mainShowroom.removeProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5,0));
+//        mainShowroom.summary();
+//
+//        System.out.println("Empty showrooms: " + container.findEmpty());
+//        System.out.println("Used condition: " + mainShowroom.countByCondition(ItemCondition.USED));
+//        System.out.println("Searching for Fusion " + mainShowroom.search("Fusion").getBrand());
+//        System.out.println("Searching for partial Co - matches count:  " + mainShowroom.searchPartial("co").size());
+//        System.out.println("Is the car electric? " + mainShowroom.search("Fusion").isElectric());
+//
+//        container.summary();
+//        System.out.println(mainShowroom.max().getBrand());
+//    }
