@@ -16,6 +16,8 @@ class Vehicle implements Comparable<Vehicle> {
     private double engineCapacity;
     private int range;
 
+    public boolean isReserved=false;
+
     public Vehicle(String brand, String model, ItemCondition condition, double price, int year, double mileage, double engineCapacity, int range ) {
         this.brand = brand;
         this.model = model;
@@ -84,14 +86,13 @@ class CarShowroom {
         this.vehicles = new ArrayList<>();
         this.maxCapacity = maxCapacity;
     }
+    public String getName(){ return showroomName; }
 
     public void addProduct(Vehicle vehicle) {
         if (vehicles.size() >= maxCapacity) {
             System.err.println("Showroom capacity exceeded. Cannot add more vehicles.");
             return;
         }
-
-
         vehicles.add(vehicle);
     }
 
@@ -104,6 +105,17 @@ class CarShowroom {
     }
 
     public java.util.List<Vehicle> getVehicles() {
+        vehicles.sort((vehicle1,vehicle2) ->{
+            int priceComparison = Double.compare(vehicle1.getPrice(), vehicle2.getPrice());
+            if (priceComparison != 0) {
+                return priceComparison;
+            }
+            int nameComparison = vehicle1.getModel().compareTo(vehicle2.getModel());
+            if (nameComparison != 0) {
+                return nameComparison;
+            }
+            return Integer.compare(vehicle1.getYear(), vehicle2.getYear());
+        });
         return vehicles;
     }
 
