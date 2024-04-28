@@ -4,9 +4,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.io.*;
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.*;
-import java.util.Comparator;
 import java.util.List;
 
 public class CarShowroomGUI extends JFrame {
@@ -32,7 +33,142 @@ public class CarShowroomGUI extends JFrame {
             table.setModel(new CarShowroomTableModel(searchResults));
     }
 
-    public CarShowroomGUI() {
+    private void exportShowroom() throws IOException {
+        String filename="Init.ser";
+        File file = new File(filename);
+        FileOutputStream filestr = new FileOutputStream(filename);
+        ObjectOutputStream out = new ObjectOutputStream(filestr);
+
+        out.writeObject(showroomContainer);
+        out.close();
+        filestr.close();
+
+        // Method for serialization of object
+        System.out.println(file.getAbsolutePath());
+    }
+    private void importShowroom() throws IOException, ClassNotFoundException {
+        String filename = "Init.ser";
+        try {
+            FileInputStream filestr = new FileInputStream(filename);
+
+            ObjectInputStream in = new ObjectInputStream(filestr);
+            showroomContainer = (CarShowroomContainer) in.readObject();
+            in.close();
+            filestr.close();
+            for (CarShowroom c : showroomContainer.getShowrooms().values()) {
+                showroomListModel.addElement(c.getName());
+                locationComboBox.addItem(c.getName());
+                System.out.println(c.getName());
+            }
+        }
+        catch(IOException ignored){
+
+        }
+    }
+    private void exportSelectedShowroomToCSV() {
+        JFileChooser fileChooser = new JFileChooser();
+        int option = fileChooser.showSaveDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try (PrintWriter writer = new PrintWriter(file)) {
+                String selectedShowroomName = (String) locationComboBox.getSelectedItem();
+                CarShowroom selectedShowroom = showroomContainer.getShowrooms().get(selectedShowroomName);
+                if (selectedShowroom != null) {
+                    // Pobierz listę pojazdów z wybranego salonu
+                    List<Vehicle> vehicles = selectedShowroom.getVehicles();
+                    // Pobierz klasę pojazdu
+                    Class<?> vehicleClass = vehicles.get(0).getClass();
+                    // Pobierz pola z adnotacjami CSVColumn
+                    Field[] fields = vehicleClass.getDeclaredFields();
+                    List<Field> annotatedFields = new ArrayList<>();
+                    for (Field field : fields) {
+                        if (field.isAnnotationPresent(CSVColumn.class)) {
+                            annotatedFields.add(field);
+                        }
+                    }
+                    // Utwórz nagłówki kolumn z nazwami i kolejnością z adnotacji
+                    List<String> headers = new ArrayList<>();
+                    for (Field field : annotatedFields) {
+                        headers.add(field.getAnnotation(CSVColumn.class).value());
+                    }
+                    // Zapisz nagłówki do pliku
+                    writer.println(String.join(",", headers));
+                    // Zapisz dane pojazdów
+                    for (Vehicle vehicle : vehicles) {
+                        List<String> rowData = new ArrayList<>();
+                        for (Field field : annotatedFields) {
+                            field.setAccessible(true);
+                            Object value = field.get(vehicle);
+                            rowData.add(value.toString());
+                        }
+                        writer.println(String.join(",", rowData));
+                    }
+                    JOptionPane.showMessageDialog(this, "Selected showroom exported to CSV successfully!");
+                }
+            } catch (IOException | IllegalAccessException ex) {
+                JOptionPane.showMessageDialog(this, "Error exporting showroom to CSV: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    private void importSelectedShowroomFromCSV() {
+        JFileChooser fileChooser = new JFileChooser();
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try (Scanner scanner = new Scanner(file)) {
+                // Pobierz zaznaczony salon
+                showroomContainer.addCenter(file.getName(),500);
+                CarShowroom selectedShowroom = showroomContainer.getShowrooms().get(file.getName());
+                showroomListModel.addElement(file.getName());
+                locationComboBox.addItem(file.getName());
+                if (selectedShowroom != null) {
+                    // Usuń obecne pojazdy ze zaznaczonego salonu
+                    selectedShowroom.getVehicles().clear();
+                    // Pomiń nagłówki
+                    if (scanner.hasNextLine()) {
+                        scanner.nextLine();
+                    }
+                    // Wczytaj dane z pliku i dodaj pojazdy do salonu
+                    while (scanner.hasNextLine()) {
+                        String line = scanner.nextLine();
+                        String[] values = line.split(",");
+                        if (values.length == 8) {
+                            try {
+                                Vehicle vehicle = getVehicle(values);
+                                selectedShowroom.addProduct(vehicle);
+                            } catch (NumberFormatException | ArrayIndexOutOfBoundsException ex) {
+                                JOptionPane.showMessageDialog(this, "Error parsing data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                            }
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Invalid data format in CSV file.", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+                    // Odśwież tabelę z danymi pojazdów
+                    table.setModel(new CarShowroomTableModel(selectedShowroom.getVehicles()));
+                    JOptionPane.showMessageDialog(this, "Selected showroom imported from CSV successfully!");
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error importing showroom from CSV: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private static Vehicle getVehicle(String[] values) {
+        String brand = values[0].trim();
+        String model = values[1].trim();
+        double price = Double.parseDouble(values[2].trim());
+        int year = Integer.parseInt(values[3].trim());
+        double mileage = Double.parseDouble(values[4].trim());
+        double engineCapacity = Double.parseDouble(values[5].trim());
+        int range = Integer.parseInt(values[6].trim());
+        boolean isElectric = Boolean.parseBoolean(values[7].trim());
+        Vehicle vehicle = new Vehicle(brand, model, ItemCondition.NEW, price, year, mileage, engineCapacity, range);
+        vehicle.setElectric(isElectric);
+        return vehicle;
+    }
+
+    public CarShowroomGUI() throws IOException, ClassNotFoundException {
         setTitle("Car Showroom Management");
         setSize(600, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -40,7 +176,20 @@ public class CarShowroomGUI extends JFrame {
         showroomContainer = new CarShowroomContainer();
         showroomListModel = new DefaultListModel<>();
         vehicleListModel = new DefaultListModel<>();
-
+//        showroomContainer.addCenter("MainShowroom",34);
+//        showroomContainer.addCenter("CityShowroom",34);
+//        CarShowroom mainShowroom = showroomContainer.getShowrooms().get("MainShowroom");
+//        CarShowroom cityShowroom = showroomContainer.getShowrooms().get("CityShowroom");
+//
+//        mainShowroom.addProduct(new Vehicle("Toyota", "Camry", ItemCondition.NEW, 30000, 2022, 0, 2.5,0));
+//        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
+//        mainShowroom.addProduct(new Vehicle("Ford", "Fusion", ItemCondition.USED, 20000, 2019, 25000, 2.0,0));
+//        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 0, 2.0,0));
+//
+//        mainShowroom.addProduct(new Vehicle("Honda", "Accord", ItemCondition.NEW, 32000, 2023, 1, 2.0,0));
+//
+//        cityShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
+//        mainShowroom.addProduct(new Vehicle("Toyota", "Corolla", ItemCondition.USED, 18000, 2018, 30000, 1.8,0));
 
         // Panel for showrooms list
         JPanel showroomsPanel = new JPanel(new BorderLayout());
@@ -79,6 +228,15 @@ public class CarShowroomGUI extends JFrame {
         JButton sortButton = new JButton("Sort Showrooms by Load");
         JButton reserveButton = new JButton("Reserve");
         JButton purchaseButton = new JButton("Purchase");
+        JButton exportButton = new JButton("Export Showrooms");
+        JButton importButton = new JButton("Import Showrooms");
+        JButton importCsvButton = new JButton("Import Showroom from CSV");
+        JButton exportCsvButton = new JButton("Export Showroom to CSV");
+
+        buttonsPanel.add(importCsvButton);
+        buttonsPanel.add(exportCsvButton);
+        buttonsPanel.add(exportButton);
+        buttonsPanel.add(importButton);
         buttonsPanel.add(locationComboBox);
         buttonsPanel.add(addShowroomButton);
         buttonsPanel.add(removeShowroomButton);
@@ -105,6 +263,15 @@ public class CarShowroomGUI extends JFrame {
         searchPanel.add(searchButton, BorderLayout.EAST);
         panel.add(searchPanel, BorderLayout.NORTH);
 
+
+        importCsvButton.addActionListener(e->{
+            importSelectedShowroomFromCSV();
+        });
+
+
+        exportCsvButton.addActionListener(e->{
+            exportSelectedShowroomToCSV();
+        });
         // Add action listener for search button
         searchButton.addActionListener(e -> {
             performSearch(searchField);
@@ -119,7 +286,20 @@ public class CarShowroomGUI extends JFrame {
                 }
             }
         });
-
+        exportButton.addActionListener(e -> {
+            try {
+                exportShowroom();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        importButton.addActionListener(e->{
+            try{
+                importShowroom();
+            } catch(IOException | ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+            }
+        });
         purchaseButton.addActionListener(e -> {
             int selectedRow = table.getSelectedRow();
             if (selectedRow != -1) {
@@ -264,11 +444,19 @@ public class CarShowroomGUI extends JFrame {
                 }
             }
         });
+        importShowroom();
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            CarShowroomGUI showroomGUI = new CarShowroomGUI();
+            CarShowroomGUI showroomGUI = null;
+            try {
+                showroomGUI = new CarShowroomGUI();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             showroomGUI.setVisible(true);
         });
     }

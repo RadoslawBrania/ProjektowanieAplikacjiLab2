@@ -1,22 +1,95 @@
+import java.io.Serializable;
 import java.util.*;
-import javax.swing.*;
-
 
 enum ItemCondition {
     NEW, USED, DAMAGED
 }
 
-class Vehicle implements Comparable<Vehicle> {
+class Vehicle implements Comparable<Vehicle>, Serializable {
+    @CSVColumn("Brand")
     private String brand;
+
+    @CSVColumn("Model")
     private String model;
-    private ItemCondition condition;
+
+    @CSVColumn("Price")
     private double price;
+
+    @CSVColumn("Year")
     private int year;
+
+    @CSVColumn("Mileage")
     private double mileage;
+
+    @CSVColumn("Engine Capacity")
     private double engineCapacity;
+    @CSVColumn("Range")
     private int range;
 
+    @CSVColumn("Is Electric")
+    private boolean isElectric;
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    public void setMileage(double mileage) {
+        this.mileage = mileage;
+    }
+
+    public void setEngineCapacity(double engineCapacity) {
+        this.engineCapacity = engineCapacity;
+    }
+
+    public int getRange() {
+        return range;
+    }
+
+    public void setRange(int range) {
+        this.range = range;
+    }
+
+    public void setElectric(boolean electric) {
+        isElectric = electric;
+    }
+
+    public void setCondition(ItemCondition condition) {
+        this.condition = condition;
+    }
+
+    public boolean isReserved() {
+        return isReserved;
+    }
+
+    public void setReserved(boolean reserved) {
+        isReserved = reserved;
+    }
+
+    private ItemCondition condition;
+
     public boolean isReserved=false;
+    public Vehicle(){
+        this.brand = "";
+        this.model = "";
+        this.condition = ItemCondition.NEW;
+        this.price = 0;
+        this.year = 0;
+        this.mileage = 0;
+        this.engineCapacity = 0;
+        this.range = 0;
+    }
 
     public Vehicle(String brand, String model, ItemCondition condition, double price, int year, double mileage, double engineCapacity, int range ) {
         this.brand = brand;
@@ -27,7 +100,11 @@ class Vehicle implements Comparable<Vehicle> {
         this.mileage = mileage;
         this.engineCapacity = engineCapacity;
         this.range = range;
+        if(this.condition==null){
+            this.condition=ItemCondition.NEW;
+        }
     }
+
 
     public void print() {
         System.out.println("Vehicle: " + brand + " " + model +
@@ -76,7 +153,7 @@ class Vehicle implements Comparable<Vehicle> {
     }
 }
 
-class CarShowroom {
+class CarShowroom implements Serializable{
     private String showroomName;
     private java.util.List<Vehicle> vehicles;
     private int maxCapacity;
@@ -176,9 +253,10 @@ class CarShowroom {
     public int getMaxCapacity() {
         return maxCapacity;
     }
+
 }
 
-class CarShowroomContainer {
+class CarShowroomContainer implements Serializable {
     private Map<String, CarShowroom> showrooms;
 
     public CarShowroomContainer() {
@@ -217,12 +295,7 @@ class CarShowroomContainer {
 
 
 public class Main {
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            CarShowroomGUI showroomGUI = new CarShowroomGUI();
-            showroomGUI.setVisible(true);
-        });
-    }
+
 }
 
 //public class Main {
